@@ -137,11 +137,11 @@
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">Mensualidad</span>
                                 @endif
                             </td>
-                            <td class="px-5 py-3.5 text-gray-600 text-xs">{{ $ins->alumno->nivelEducativo?->nombre ?? '—' }}</td>
+                            <td class="px-5 py-3.5 text-gray-600 text-xs">{{ $ins->nivelEducativo?->nombre ?? '—' }}</td>
                             <td class="px-5 py-3.5 text-gray-600 text-xs">
-                                {{ $ins->alumno->grado?->nombre ?? '—' }}
-                                @if ($ins->alumno->seccion)
-                                    <span class="text-gray-400">/ {{ $ins->alumno->seccion->nombre }}</span>
+                                {{ $ins->grado?->nombre ?? '—' }}
+                                @if ($ins->seccion)
+                                    <span class="text-gray-400">/ {{ $ins->seccion->nombre }}</span>
                                 @endif
                             </td>
                             <td class="px-5 py-3.5 text-gray-600 text-xs">{{ $ins->mes?->nombre ?? '—' }}</td>

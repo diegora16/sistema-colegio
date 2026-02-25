@@ -13,3 +13,10 @@ Schedule::command('mensualidades:generar')
     ->monthlyOn(1, '00:01')
     ->withoutOverlapping()
     ->runInBackground();
+
+// ── Crear y activar el año académico nuevo cada 1 de enero a las 00:05 GMT-5 ─
+Schedule::command('app:nuevo-anio')
+    ->yearlyOn(1, 1, '00:05')
+    ->timezone('America/Lima')
+    ->withoutOverlapping()
+    ->runInBackground();

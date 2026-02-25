@@ -75,6 +75,8 @@ class MatriculaController extends Controller
         $inscripcion = InscripcionPago::create([
             'id_alumno'      => $alumno->id,
             'id_seccion'     => $alumno->id_seccion,
+            'id_grado'       => $alumno->id_grado,
+            'id_educativo'   => $alumno->id_educativo,
             'id_año'         => $anioActivo->id,
             'id_tipo_pago'   => $tipoMatricula->id,
             'id_mes'         => null,

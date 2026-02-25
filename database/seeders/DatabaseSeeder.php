@@ -12,6 +12,7 @@ class DatabaseSeeder extends Seeder
             AdminSeeder::class,
             TipoPagoSeeder::class,
             MesSeeder::class,
+            AnioAcademicoSeeder::class,
         ]);
     }
 }

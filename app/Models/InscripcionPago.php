@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Grado;
+use App\Models\NivelEducativo;
 
 class InscripcionPago extends Model
 {
@@ -11,6 +13,8 @@ class InscripcionPago extends Model
     protected $fillable = [
         'id_alumno',
         'id_seccion',
+        'id_grado',
+        'id_educativo',
         'id_año',
         'id_tipo_pago',
         'id_mes',
@@ -32,6 +36,16 @@ class InscripcionPago extends Model
     public function seccion()
     {
         return $this->belongsTo(Seccion::class, 'id_seccion');
+    }
+
+    public function grado()
+    {
+        return $this->belongsTo(Grado::class, 'id_grado');
+    }
+
+    public function nivelEducativo()
+    {
+        return $this->belongsTo(NivelEducativo::class, 'id_educativo');
     }
 
     public function anioAcademico()

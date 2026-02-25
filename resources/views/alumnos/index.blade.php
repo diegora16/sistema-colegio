@@ -56,9 +56,10 @@
                 </thead>
                 <tbody class="divide-y divide-gray-50">
                     @forelse ($alumnos as $alumno)
+                        @php $ins = $alumno->inscripcionesPago->first() @endphp
                         <tr class="hover:bg-gray-50/60 transition-colors"
                             x-show="!search || $el.dataset.search.includes(search.toLowerCase())"
-                            data-search="{{ strtolower($alumno->nombre_completo . ' ' . $alumno->dni . ' ' . ($alumno->nivelEducativo?->nombre ?? '') . ' ' . ($alumno->grado?->nombre ?? '') . ' ' . ($alumno->seccion?->nombre ?? '') . ' ' . ($alumno->apoderado?->nombre_completo ?? '')) }}">
+                            data-search="{{ strtolower($alumno->nombre_completo . ' ' . $alumno->dni . ' ' . ($ins?->nivelEducativo?->nombre ?? '') . ' ' . ($ins?->grado?->nombre ?? '') . ' ' . ($ins?->seccion?->nombre ?? '') . ' ' . ($alumno->apoderado?->nombre_completo ?? '')) }}">
                             <td class="px-5 py-3.5 text-gray-500 text-xs font-mono">{{ $alumno->dni }}</td>
                             <td class="px-5 py-3.5">
                                 <div class="font-semibold text-gray-800 text-sm">{{ $alumno->nombre_completo }}</div>
@@ -67,13 +68,13 @@
                                 @endif
                             </td>
                             <td class="px-5 py-3.5 text-gray-600 text-xs">
-                                {{ $alumno->nivelEducativo->nombre ?? '—' }}
+                                {{ $ins?->nivelEducativo?->nombre ?? '—' }}
                             </td>
                             <td class="px-5 py-3.5">
-                                <span class="text-gray-700 text-xs font-medium">{{ $alumno->grado->nombre ?? '—' }}</span>
-                                @if ($alumno->seccion)
+                                <span class="text-gray-700 text-xs font-medium">{{ $ins?->grado?->nombre ?? '—' }}</span>
+                                @if ($ins?->seccion)
                                     <span class="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
-                                        {{ $alumno->seccion->nombre }}
+                                        {{ $ins->seccion->nombre }}
                                     </span>
                                 @endif
                             </td>

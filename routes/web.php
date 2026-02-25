@@ -25,6 +25,7 @@ Route::middleware('auth')->group(function () {
     // ── Configuración ────────────────────────────────────────────────────────
     Route::prefix('configuracion')->name('configuracion.')->group(function () {
         Route::resource('anios',     'App\Http\Controllers\Configuracion\AnioAcademicoController');
+        Route::post('anios/{anio}/activar', 'App\Http\Controllers\Configuracion\AnioAcademicoController@activar')->name('anios.activar');
         Route::resource('niveles',   'App\Http\Controllers\Configuracion\NivelEducativoController')
             ->parameters(['niveles' => 'nivel']);
         Route::resource('grados',    'App\Http\Controllers\Configuracion\GradoController');

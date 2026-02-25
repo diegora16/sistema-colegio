@@ -24,7 +24,8 @@ class ReporteController extends Controller
     // ── Reporte 1: Alumnos matriculados ────────────────────────────────────────
     public function alumnos(Request $request)
     {
-        $anioActivo = AnioAcademico::where('estado', 'activo')->first();
+        $anioActivo    = AnioAcademico::where('estado', 'activo')->first();
+        $tipoMatricula = TipoPago::where('nombre', 'Matrícula')->first();
 
         $niveles   = $anioActivo
             ? NivelEducativo::where('id_año', $anioActivo->id)->orderBy('nombre')->get()
@@ -36,22 +37,25 @@ class ReporteController extends Controller
             ? Seccion::where('id_grado', $request->grado)->orderBy('nombre')->get()
             : collect();
 
-        $tipoMatricula = TipoPago::where('nombre', 'Matrícula')->first();
-
-        $alumnos = Alumno::with(['apoderado', 'nivelEducativo', 'grado', 'seccion'])
-            ->when($anioActivo, fn($q) =>
-                $q->whereHas('nivelEducativo', fn($q2) => $q2->where('id_año', $anioActivo->id))
-            )
+        $alumnos = Alumno::with([
+            'apoderado',
+            'inscripcionesPago' => fn($q) => $q
+                ->when($anioActivo && $tipoMatricula, fn($q2) =>
+                    $q2->where('id_año', $anioActivo->id)
+                       ->where('id_tipo_pago', $tipoMatricula->id)
+                )
+                ->with(['grado', 'nivelEducativo', 'seccion']),
+        ])
             ->when($anioActivo && $tipoMatricula, fn($q) =>
                 $q->whereHas('inscripcionesPago', fn($q2) =>
                     $q2->where('id_año', $anioActivo->id)
                        ->where('id_tipo_pago', $tipoMatricula->id)
                        ->where('estado', 'pagado')
+                       ->when($request->filled('nivel'),   fn($q3) => $q3->where('id_educativo', $request->nivel))
+                       ->when($request->filled('grado'),   fn($q3) => $q3->where('id_grado',     $request->grado))
+                       ->when($request->filled('seccion'), fn($q3) => $q3->where('id_seccion',   $request->seccion))
                 )
             )
-            ->when($request->filled('nivel'),   fn($q) => $q->where('id_educativo', $request->nivel))
-            ->when($request->filled('grado'),   fn($q) => $q->where('id_grado',     $request->grado))
-            ->when($request->filled('seccion'), fn($q) => $q->where('id_seccion',   $request->seccion))
             ->orderBy('apellido_p')
             ->orderBy('apellido_m')
             ->orderBy('nombres')
@@ -64,24 +68,28 @@ class ReporteController extends Controller
 
     public function alumnosPdf(Request $request)
     {
-        $anioActivo = AnioAcademico::where('estado', 'activo')->first();
-
+        $anioActivo    = AnioAcademico::where('estado', 'activo')->first();
         $tipoMatricula = TipoPago::where('nombre', 'Matrícula')->first();
 
-        $alumnos = Alumno::with(['apoderado', 'nivelEducativo', 'grado', 'seccion'])
-            ->when($anioActivo, fn($q) =>
-                $q->whereHas('nivelEducativo', fn($q2) => $q2->where('id_año', $anioActivo->id))
-            )
+        $alumnos = Alumno::with([
+            'apoderado',
+            'inscripcionesPago' => fn($q) => $q
+                ->when($anioActivo && $tipoMatricula, fn($q2) =>
+                    $q2->where('id_año', $anioActivo->id)
+                       ->where('id_tipo_pago', $tipoMatricula->id)
+                )
+                ->with(['grado', 'nivelEducativo', 'seccion']),
+        ])
             ->when($anioActivo && $tipoMatricula, fn($q) =>
                 $q->whereHas('inscripcionesPago', fn($q2) =>
                     $q2->where('id_año', $anioActivo->id)
                        ->where('id_tipo_pago', $tipoMatricula->id)
                        ->where('estado', 'pagado')
+                       ->when($request->filled('nivel'),   fn($q3) => $q3->where('id_educativo', $request->nivel))
+                       ->when($request->filled('grado'),   fn($q3) => $q3->where('id_grado',     $request->grado))
+                       ->when($request->filled('seccion'), fn($q3) => $q3->where('id_seccion',   $request->seccion))
                 )
             )
-            ->when($request->filled('nivel'),   fn($q) => $q->where('id_educativo', $request->nivel))
-            ->when($request->filled('grado'),   fn($q) => $q->where('id_grado',     $request->grado))
-            ->when($request->filled('seccion'), fn($q) => $q->where('id_seccion',   $request->seccion))
             ->orderBy('apellido_p')
             ->orderBy('apellido_m')
             ->orderBy('nombres')
@@ -112,18 +120,17 @@ class ReporteController extends Controller
         $meses = Mes::orderBy('numero')->get();
 
         $inscripciones = InscripcionPago::with([
-            'alumno.nivelEducativo',
-            'alumno.grado',
-            'alumno.seccion',
+            'alumno',
+            'nivelEducativo',
+            'grado',
+            'seccion',
             'tipoPago',
             'mes',
         ])
             ->withSum('pagos', 'aporte')
             ->when($anioActivo, fn($q) => $q->where('id_año', $anioActivo->id))
             ->whereIn('estado', ['pendiente', 'parcial'])
-            ->when($request->filled('nivel'), fn($q) =>
-                $q->whereHas('alumno', fn($q2) => $q2->where('id_educativo', $request->nivel))
-            )
+            ->when($request->filled('nivel'), fn($q) => $q->where('id_educativo', $request->nivel))
             ->when($request->filled('mes'), fn($q) => $q->where('id_mes', $request->mes))
             ->orderBy('id_tipo_pago')
             ->orderBy('id_mes')
@@ -139,18 +146,17 @@ class ReporteController extends Controller
         $anioActivo = AnioAcademico::where('estado', 'activo')->first();
 
         $inscripciones = InscripcionPago::with([
-            'alumno.nivelEducativo',
-            'alumno.grado',
-            'alumno.seccion',
+            'alumno',
+            'nivelEducativo',
+            'grado',
+            'seccion',
             'tipoPago',
             'mes',
         ])
             ->withSum('pagos', 'aporte')
             ->when($anioActivo, fn($q) => $q->where('id_año', $anioActivo->id))
             ->whereIn('estado', ['pendiente', 'parcial'])
-            ->when($request->filled('nivel'), fn($q) =>
-                $q->whereHas('alumno', fn($q2) => $q2->where('id_educativo', $request->nivel))
-            )
+            ->when($request->filled('nivel'), fn($q) => $q->where('id_educativo', $request->nivel))
             ->when($request->filled('mes'), fn($q) => $q->where('id_mes', $request->mes))
             ->orderBy('id_tipo_pago')
             ->orderBy('id_mes')

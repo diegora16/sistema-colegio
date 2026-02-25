@@ -32,15 +32,36 @@
         </a>
 
         {{-- Navegación --}}
+        @php
+            $anioActivo   = \App\Models\AnioAcademico::where('estado', 'activo')->first();
+            $anioActual   = (int) now()->setTimezone('America/Lima')->format('Y');
+            $modoLectura  = $anioActivo && (int) $anioActivo->nombre !== $anioActual;
+        @endphp
+
+        {{-- Indicador de modo lectura --}}
+        @if ($modoLectura)
+            <div class="mx-3 mt-2 mb-1 px-3 py-2 rounded-lg bg-amber-500/20 border border-amber-400/30">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-eye text-amber-300 text-[10px] flex-shrink-0"></i>
+                    <span class="text-amber-200 text-[11px] font-semibold leading-tight">
+                        Modo lectura<br>
+                        <span class="text-amber-300/80 font-normal">Año {{ $anioActivo->nombre }}</span>
+                    </span>
+                </div>
+            </div>
+        @endif
+
         <nav class="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto">
 
-            {{-- Dashboard --}}
+            {{-- Dashboard (solo año actual) --}}
+            @if (!$modoLectura)
             <a href="{{ route('dashboard') }}"
                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-colors duration-150
                       {{ request()->routeIs('dashboard') ? 'bg-primary-darker text-white' : 'text-white/70 hover:bg-primary-dark hover:text-white' }}">
                 <i class="fa-solid fa-gauge-high w-4 text-center text-[11px]"></i>
                 Dashboard
             </a>
+            @endif
 
             {{-- Configuración (colapsable) --}}
             <div x-data="{ open: {{ request()->routeIs('configuracion.*') ? 'true' : 'false' }} }">
@@ -88,6 +109,9 @@
                     </a>
                 </div>
             </div>
+
+            {{-- Alumnos y Pagos: solo en año actual --}}
+            @if (!$modoLectura)
 
             {{-- Alumnos (colapsable) --}}
             <div x-data="{ open: {{ request()->routeIs('alumnos.*') || request()->routeIs('apoderados.*') ? 'true' : 'false' }} }">
@@ -159,6 +183,8 @@
                 </div>
             </div>
 
+            @endif {{-- fin !$modoLectura --}}
+
             {{-- Reportes --}}
             <a href="{{ route('reportes.index') }}"
                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-colors duration-150
@@ -213,6 +239,19 @@
 
         {{-- Área de contenido --}}
         <main class="flex-1 overflow-y-auto p-6 bg-gray-50">
+
+            {{-- Banner modo lectura --}}
+            @if ($modoLectura)
+                <div class="mb-5 flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+                    <i class="fa-solid fa-eye text-amber-500 flex-shrink-0 mt-0.5"></i>
+                    <div class="text-sm text-amber-700">
+                        <span class="font-semibold">Modo lectura — Año {{ $anioActivo->nombre }}.</span>
+                        Solo puedes consultar reportes y configuración.
+                        Para volver al año actual, activa el año {{ $anioActual }} en
+                        <a href="{{ route('configuracion.anios.index') }}" class="font-semibold underline">Configuración → Años</a>.
+                    </div>
+                </div>
+            @endif
 
             {{-- Flash: success --}}
             @if (session('success'))

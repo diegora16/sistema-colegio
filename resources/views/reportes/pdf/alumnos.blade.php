@@ -142,13 +142,14 @@
         </thead>
         <tbody>
             @forelse ($alumnos as $i => $alumno)
+                @php $ins = $alumno->inscripcionesPago->first() @endphp
                 <tr>
                     <td class="num">{{ $i + 1 }}</td>
                     <td class="mono">{{ $alumno->dni }}</td>
                     <td class="bold">{{ $alumno->nombre_completo }}</td>
-                    <td>{{ $alumno->nivelEducativo?->nombre ?? '—' }}</td>
-                    <td>{{ $alumno->grado?->nombre ?? '—' }}</td>
-                    <td>{{ $alumno->seccion?->nombre ?? '—' }}</td>
+                    <td>{{ $ins?->nivelEducativo?->nombre ?? '—' }}</td>
+                    <td>{{ $ins?->grado?->nombre ?? '—' }}</td>
+                    <td>{{ $ins?->seccion?->nombre ?? '—' }}</td>
                     <td>{{ $alumno->apoderado?->nombre_completo ?? '—' }}</td>
                     <td class="mono">{{ $alumno->apoderado?->telefono ?? '—' }}</td>
                 </tr>

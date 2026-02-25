@@ -10,8 +10,21 @@ class AnioAcademicoController extends Controller
 {
     public function index()
     {
-        $anios = AnioAcademico::orderBy('nombre', 'desc')->get();
-        return view('configuracion.anios.index', compact('anios'));
+        $anios      = AnioAcademico::orderBy('nombre', 'desc')->get();
+        $anioActual = (int) now()->setTimezone('America/Lima')->format('Y');
+        return view('configuracion.anios.index', compact('anios', 'anioActual'));
+    }
+
+    public function activar(AnioAcademico $anio)
+    {
+        AnioAcademico::where('id', '!=', $anio->id)
+            ->where('estado', 'activo')
+            ->update(['estado' => 'cerrado']);
+
+        $anio->update(['estado' => 'activo']);
+
+        return redirect()->route('configuracion.anios.index')
+            ->with('success', "Año académico {$anio->nombre} activado correctamente.");
     }
 
     public function create()

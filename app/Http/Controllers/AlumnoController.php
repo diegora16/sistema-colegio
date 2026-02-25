@@ -8,18 +8,28 @@ use App\Models\AnioAcademico;
 use App\Models\NivelEducativo;
 use App\Models\Grado;
 use App\Models\Seccion;
+use App\Models\TipoPago;
 use Illuminate\Http\Request;
 
 class AlumnoController extends Controller
 {
     public function index()
     {
-        $anioActivo = AnioAcademico::where('estado', 'activo')->first();
+        $anioActivo    = AnioAcademico::where('estado', 'activo')->first();
+        $tipoMatricula = TipoPago::where('nombre', 'Matrícula')->first();
 
-        $alumnos = Alumno::with(['apoderado', 'nivelEducativo', 'grado', 'seccion'])
-            ->when($anioActivo, function ($q) use ($anioActivo) {
-                $q->whereHas('nivelEducativo', fn($q2) => $q2->where('id_año', $anioActivo->id));
-            })
+        $alumnos = Alumno::with([
+            'apoderado',
+            'inscripcionesPago' => fn($q) => $q
+                ->when($anioActivo && $tipoMatricula, fn($q2) =>
+                    $q2->where('id_año', $anioActivo->id)
+                       ->where('id_tipo_pago', $tipoMatricula->id)
+                )
+                ->with(['grado', 'nivelEducativo', 'seccion']),
+        ])
+            ->when($anioActivo, fn($q) =>
+                $q->whereHas('inscripcionesPago', fn($q2) => $q2->where('id_año', $anioActivo->id))
+            )
             ->orderBy('apellido_p')
             ->orderBy('apellido_m')
             ->orderBy('nombres')

@@ -103,15 +103,16 @@
                 </thead>
                 <tbody class="divide-y divide-gray-50">
                     @forelse ($alumnos as $i => $alumno)
+                        @php $ins = $alumno->inscripcionesPago->first() @endphp
                         <tr class="hover:bg-gray-50/60 transition-colors">
                             <td class="px-5 py-3.5 text-gray-400 text-xs font-mono">{{ $i + 1 }}</td>
                             <td class="px-5 py-3.5 text-gray-500 text-xs font-mono">{{ $alumno->dni }}</td>
                             <td class="px-5 py-3.5">
                                 <span class="font-semibold text-gray-800">{{ $alumno->nombre_completo }}</span>
                             </td>
-                            <td class="px-5 py-3.5 text-gray-600 text-xs">{{ $alumno->nivelEducativo?->nombre ?? '—' }}</td>
-                            <td class="px-5 py-3.5 text-gray-600 text-xs">{{ $alumno->grado?->nombre ?? '—' }}</td>
-                            <td class="px-5 py-3.5 text-gray-600 text-xs">{{ $alumno->seccion?->nombre ?? '—' }}</td>
+                            <td class="px-5 py-3.5 text-gray-600 text-xs">{{ $ins?->nivelEducativo?->nombre ?? '—' }}</td>
+                            <td class="px-5 py-3.5 text-gray-600 text-xs">{{ $ins?->grado?->nombre ?? '—' }}</td>
+                            <td class="px-5 py-3.5 text-gray-600 text-xs">{{ $ins?->seccion?->nombre ?? '—' }}</td>
                             <td class="px-5 py-3.5 text-gray-600 text-xs">{{ $alumno->apoderado?->nombre_completo ?? '—' }}</td>
                             <td class="px-5 py-3.5 text-gray-500 text-xs font-mono">{{ $alumno->apoderado?->telefono ?? '—' }}</td>
                         </tr>

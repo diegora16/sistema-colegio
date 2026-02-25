@@ -185,11 +185,11 @@
                         <span style="font-size:6.5pt; color:#9ca3af; font-family:monospace;">{{ $ins->alumno->dni }}</span>
                     </td>
                     <td>{{ $ins->tipoPago?->nombre ?? '—' }}</td>
-                    <td>{{ $ins->alumno->nivelEducativo?->nombre ?? '—' }}</td>
+                    <td>{{ $ins->nivelEducativo?->nombre ?? '—' }}</td>
                     <td>
-                        {{ $ins->alumno->grado?->nombre ?? '—' }}
-                        @if ($ins->alumno->seccion)
-                            / {{ $ins->alumno->seccion->nombre }}
+                        {{ $ins->grado?->nombre ?? '—' }}
+                        @if ($ins->seccion)
+                            / {{ $ins->seccion->nombre }}
                         @endif
                     </td>
                     <td>{{ $ins->mes?->nombre ?? '—' }}</td>
