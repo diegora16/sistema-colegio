@@ -1,59 +1,202 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Sistema de Gestión Escolar — I.E.P. Jesús y María
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sistema web para la gestión académica y de pagos del colegio I.E.P. Jesús y María, desarrollado con Laravel 12.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Requisitos previos
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Asegúrate de tener instalado lo siguiente antes de continuar:
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+| Herramienta | Versión mínima |
+|-------------|----------------|
+| PHP         | 8.2            |
+| Composer    | 2.x            |
+| Node.js     | 18.x           |
+| npm         | 9.x            |
+| MySQL       | 8.0            |
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## Instalación
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 1. Clonar el repositorio
 
-## Laravel Sponsors
+```bash
+git clone <url-del-repositorio> sistema-colegio
+cd sistema-colegio
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 2. Instalar dependencias PHP
 
-### Premium Partners
+```bash
+composer install
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### 3. Instalar dependencias JavaScript
 
-## Contributing
+```bash
+npm install
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 4. Configurar el entorno
 
-## Code of Conduct
+Copia el archivo de ejemplo y edítalo:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```bash
+cp .env.example .env
+```
 
-## Security Vulnerabilities
+Abre `.env` y configura la conexión a la base de datos:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```env
+APP_NAME="I.E.P. Jesús y María"
+APP_URL=http://localhost:8000
 
-## License
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=sistema_colegio
+DB_USERNAME=root
+DB_PASSWORD=tu_contraseña
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 5. Generar la clave de la aplicación
+
+```bash
+php artisan key:generate
+```
+
+### 6. Crear la base de datos
+
+Crea la base de datos `sistema_colegio` en MySQL (o el nombre que configuraste en `.env`), luego ejecuta las migraciones y seeders:
+
+```bash
+php artisan migrate:fresh --seed
+```
+
+Esto crea todas las tablas y carga los datos iniciales:
+- Usuario administrador
+- Tipos de pago (Matrícula, Mensualidad)
+- Meses del año escolar (Marzo–Diciembre)
+- Año académico actual con niveles y grados del sistema educativo peruano
+
+### 7. Crear el enlace de almacenamiento
+
+Necesario para mostrar las fotos de comprobantes de pago:
+
+```bash
+php artisan storage:link
+```
+
+### 8. Compilar los assets
+
+```bash
+npm run build
+```
+
+---
+
+## Ejecutar el servidor de desarrollo
+
+```bash
+php artisan serve
+```
+
+La aplicación estará disponible en [http://localhost:8000](http://localhost:8000).
+
+Para desarrollo con recarga automática de estilos:
+
+```bash
+# En una terminal:
+php artisan serve
+
+# En otra terminal:
+npm run dev
+```
+
+---
+
+## Credenciales por defecto
+
+| Campo      | Valor                        |
+|------------|------------------------------|
+| Email      | admin@jesusymaria.edu.pe     |
+| Contraseña | admin123                     |
+
+> **Importante:** Cambia la contraseña después del primer inicio de sesión.
+
+---
+
+## Tareas programadas (Scheduler)
+
+El sistema ejecuta tareas automáticas que requieren el scheduler de Laravel activo:
+
+| Tarea | Frecuencia | Descripción |
+|-------|-----------|-------------|
+| `mensualidades:generar` | 1ro de cada mes, 00:01 | Genera las cuotas mensuales de todos los alumnos matriculados |
+| `app:nuevo-anio` | 1 de enero, 00:05 GMT-5 | Crea y activa el nuevo año académico con sus niveles y grados |
+
+### En desarrollo (Windows)
+
+```bash
+php artisan schedule:work
+```
+
+### En producción (Linux/cPanel)
+
+Agrega esta línea al crontab del servidor:
+
+```cron
+* * * * * cd /ruta/al/proyecto && php artisan schedule:run >> /dev/null 2>&1
+```
+
+---
+
+## Primeros pasos tras instalar
+
+1. **Configurar precios** — Ve a `Configuración → Nivel Educativo` y ajusta el precio mensual de cada nivel (se inicializa en S/ 0.00).
+2. **Crear secciones** — Ve a `Configuración → Secciones` y añade las secciones del colegio (ej: A, B, C) para cada grado.
+3. **Registrar alumnos** — Ve a `Alumnos → Lista de Alumnos` para agregar alumnos.
+4. **Matricular alumnos** — Ve a `Pagos → Matricular Alumno` para registrar la matrícula del año.
+
+---
+
+## Estructura del sistema educativo peruano (precargada)
+
+| Nivel | Grados |
+|-------|--------|
+| Inicial | 3 Años, 4 Años, 5 Años |
+| Primaria | 1°, 2°, 3°, 4°, 5°, 6° |
+| Secundaria | 1°, 2°, 3°, 4°, 5° |
+
+---
+
+## Comandos útiles
+
+```bash
+# Resetear la base de datos completamente
+php artisan migrate:fresh --seed
+
+# Limpiar caché de vistas
+php artisan view:clear
+
+# Compilar assets para producción
+npm run build
+
+# Ver todas las rutas del sistema
+php artisan route:list
+
+# Crear manualmente el año académico actual
+php artisan app:nuevo-anio
+```
+
+---
+
+## Stack tecnológico
+
+- **Backend:** Laravel 12, PHP 8.2
+- **Frontend:** Tailwind CSS v3, Alpine.js, Font Awesome 6.6.0
+- **Base de datos:** MySQL 8.0
+- **PDF:** barryvdh/laravel-dompdf v3.1.1
+- **Gráficos:** Chart.js 4.4.0
