@@ -18,6 +18,42 @@ class AnioService
     ];
 
     /**
+     * Mapa de progresión de grado: nivel actual + grado actual → siguiente nivel + grado.
+     * null = el alumno egresa (Secundaria 5°).
+     */
+    private static array $progresion = [
+        'Inicial' => [
+            '3 Años' => ['nivel' => 'Inicial',    'grado' => '4 Años'],
+            '4 Años' => ['nivel' => 'Inicial',    'grado' => '5 Años'],
+            '5 Años' => ['nivel' => 'Primaria',   'grado' => '1°'],
+        ],
+        'Primaria' => [
+            '1°' => ['nivel' => 'Primaria',   'grado' => '2°'],
+            '2°' => ['nivel' => 'Primaria',   'grado' => '3°'],
+            '3°' => ['nivel' => 'Primaria',   'grado' => '4°'],
+            '4°' => ['nivel' => 'Primaria',   'grado' => '5°'],
+            '5°' => ['nivel' => 'Primaria',   'grado' => '6°'],
+            '6°' => ['nivel' => 'Secundaria', 'grado' => '1°'],
+        ],
+        'Secundaria' => [
+            '1°' => ['nivel' => 'Secundaria', 'grado' => '2°'],
+            '2°' => ['nivel' => 'Secundaria', 'grado' => '3°'],
+            '3°' => ['nivel' => 'Secundaria', 'grado' => '4°'],
+            '4°' => ['nivel' => 'Secundaria', 'grado' => '5°'],
+            '5°' => null,
+        ],
+    ];
+
+    /**
+     * Devuelve el siguiente nivel y grado dados el nivel y grado actuales.
+     * Retorna null si el alumno egresa (Secundaria 5°).
+     */
+    public static function siguienteGrado(string $nivelNombre, string $gradoNombre): ?array
+    {
+        return self::$progresion[$nivelNombre][$gradoNombre] ?? null;
+    }
+
+    /**
      * Crea (o activa) el año académico indicado con sus niveles y grados estándar.
      * Marca todos los demás años como 'cerrado'.
      */

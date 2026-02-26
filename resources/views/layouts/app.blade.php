@@ -145,6 +145,12 @@
                         <i class="fa-solid fa-people-roof w-3.5 text-center text-[10px]"></i>
                         Apoderados
                     </a>
+                    <a href="{{ route('alumnos.promover') }}"
+                       class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors duration-150
+                              {{ request()->routeIs('alumnos.promover*') ? 'bg-primary-darker text-white' : 'text-white/60 hover:bg-primary-dark hover:text-white' }}">
+                        <i class="fa-solid fa-arrow-up-right-dots w-3.5 text-center text-[10px]"></i>
+                        Promover Alumnos
+                    </a>
                 </div>
             </div>
 

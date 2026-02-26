@@ -9,6 +9,7 @@ use App\Models\NivelEducativo;
 use App\Models\Grado;
 use App\Models\Seccion;
 use App\Models\TipoPago;
+use App\Services\AnioService;
 use Illuminate\Http\Request;
 
 class AlumnoController extends Controller
@@ -146,7 +147,7 @@ class AlumnoController extends Controller
             'apoderado_telefono'   => ['nullable', 'string', 'max:15'],
             'id_educativo'         => ['required', 'exists:nivel_educativo,id'],
             'id_grado'             => ['required', 'exists:grado,id'],
-            'id_seccion'           => ['required', 'exists:seccion,id'],
+            'id_seccion'           => ['nullable', 'exists:seccion,id'],
             'dni'                  => ['required', 'digits:8', 'unique:alumno,dni,' . $alumno->id],
             'nombres'              => ['required', 'string', 'max:100'],
             'apellido_p'           => ['required', 'string', 'max:50'],
@@ -200,6 +201,85 @@ class AlumnoController extends Controller
 
         return redirect()->route('alumnos.index')
             ->with('success', 'Alumno actualizado correctamente.');
+    }
+
+    public function promoverForm()
+    {
+        $anioActivo = AnioAcademico::where('estado', 'activo')->first();
+
+        if (!$anioActivo) {
+            return redirect()->route('alumnos.index')->with('error', 'No hay año académico activo.');
+        }
+
+        // Alumnos cuyo id_educativo apunta a un año distinto al activo
+        $alumnos = Alumno::with(['nivelEducativo.anioAcademico', 'grado', 'seccion'])
+            ->whereHas('nivelEducativo', fn($q) => $q->where('id_año', '!=', $anioActivo->id))
+            ->orderBy('apellido_p')->orderBy('apellido_m')->orderBy('nombres')
+            ->get();
+
+        // Calcular siguiente grado para cada alumno
+        foreach ($alumnos as $alumno) {
+            $nivelActual = $alumno->nivelEducativo?->nombre;
+            $gradoActual = $alumno->grado?->nombre;
+            $siguiente   = ($nivelActual && $gradoActual)
+                ? AnioService::siguienteGrado($nivelActual, $gradoActual)
+                : null;
+
+            if ($siguiente) {
+                $nuevoNivel          = NivelEducativo::where('nombre', $siguiente['nivel'])->where('id_año', $anioActivo->id)->first();
+                $alumno->nuevoNivel  = $nuevoNivel;
+                $alumno->nuevoGrado  = $nuevoNivel
+                    ? Grado::where('nombre', $siguiente['grado'])->where('id_educativo', $nuevoNivel->id)->first()
+                    : null;
+                $alumno->egresa      = false;
+            } else {
+                $alumno->nuevoNivel = null;
+                $alumno->nuevoGrado = null;
+                $alumno->egresa     = ($nivelActual === 'Secundaria' && $gradoActual === '5°');
+            }
+        }
+
+        $porPromover = $alumnos->filter(fn($a) => !$a->egresa && $a->nuevoGrado);
+        $egresados   = $alumnos->filter(fn($a) => $a->egresa);
+
+        return view('alumnos.promover', compact('anioActivo', 'porPromover', 'egresados'));
+    }
+
+    public function promoverEjecutar()
+    {
+        $anioActivo = AnioAcademico::where('estado', 'activo')->firstOrFail();
+
+        $alumnos = Alumno::with(['nivelEducativo', 'grado'])
+            ->whereHas('nivelEducativo', fn($q) => $q->where('id_año', '!=', $anioActivo->id))
+            ->get();
+
+        $promovidos = 0;
+
+        foreach ($alumnos as $alumno) {
+            $nivelActual = $alumno->nivelEducativo?->nombre;
+            $gradoActual = $alumno->grado?->nombre;
+            if (!$nivelActual || !$gradoActual) continue;
+
+            $siguiente = AnioService::siguienteGrado($nivelActual, $gradoActual);
+            if (!$siguiente) continue; // egresa — no se promueve automáticamente
+
+            $nuevoNivel = NivelEducativo::where('nombre', $siguiente['nivel'])->where('id_año', $anioActivo->id)->first();
+            if (!$nuevoNivel) continue;
+
+            $nuevoGrado = Grado::where('nombre', $siguiente['grado'])->where('id_educativo', $nuevoNivel->id)->first();
+            if (!$nuevoGrado) continue;
+
+            $alumno->update([
+                'id_educativo' => $nuevoNivel->id,
+                'id_grado'     => $nuevoGrado->id,
+                'id_seccion'   => null,
+            ]);
+
+            $promovidos++;
+        }
+
+        return redirect()->route('alumnos.index')
+            ->with('success', "{$promovidos} " . ($promovidos === 1 ? 'alumno promovido' : 'alumnos promovidos') . " correctamente al año {$anioActivo->nombre}. Recuerda asignarles su sección.");
     }
 
     public function destroy(Alumno $alumno)

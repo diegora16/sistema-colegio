@@ -35,6 +35,8 @@ Route::middleware('auth')->group(function () {
     });
 
     // ── Alumnos ──────────────────────────────────────────────────────────────
+    Route::get( '/alumnos/promover', 'App\Http\Controllers\AlumnoController@promoverForm')->name('alumnos.promover');
+    Route::post('/alumnos/promover', 'App\Http\Controllers\AlumnoController@promoverEjecutar')->name('alumnos.promover.ejecutar');
     Route::resource('alumnos',    'App\Http\Controllers\AlumnoController');
     Route::get('/apoderados/buscar', 'App\Http\Controllers\ApoderadoController@buscarPorDni')
         ->name('apoderados.buscar');
