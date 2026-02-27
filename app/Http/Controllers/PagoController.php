@@ -22,7 +22,8 @@ class PagoController extends Controller
             ->when($request->estado, fn($q, $e) => $q->where('estado', $e))
             ->when($request->tipo,   fn($q, $t) => $q->where('id_tipo_pago', $t))
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(20)
+            ->withQueryString();
 
         $tipos = TipoPago::orderBy('id')->get();
 

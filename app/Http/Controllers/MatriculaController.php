@@ -33,7 +33,12 @@ class MatriculaController extends Controller
                 ->toArray()
             : [];
 
-        return view('pagos.matricular', compact('alumnos', 'tipoMatricula', 'anioActivo', 'yaMatriculados'));
+        $preseleccionado = null;
+        if ($alumnoId = request()->query('alumno_id')) {
+            $preseleccionado = $alumnos->firstWhere('id', (int) $alumnoId);
+        }
+
+        return view('pagos.matricular', compact('alumnos', 'tipoMatricula', 'anioActivo', 'yaMatriculados', 'preseleccionado'));
     }
 
     public function store(Request $request)

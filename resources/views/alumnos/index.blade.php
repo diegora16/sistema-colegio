@@ -23,23 +23,23 @@
         </div>
     @endif
 
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden" x-data="{ search: '' }">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
 
         <div class="px-5 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
             <p class="text-sm text-gray-500 shrink-0">
-                {{ $alumnos->count() }} {{ $alumnos->count() === 1 ? 'alumno registrado' : 'alumnos registrados' }}
+                {{ $alumnos->total() }} {{ $alumnos->total() === 1 ? 'alumno registrado' : 'alumnos registrados' }}
                 @if ($anioActivo)
                     <span class="text-gray-400">— Año {{ $anioActivo->nombre }}</span>
                 @endif
             </p>
-            <div class="flex items-center w-full sm:w-72 border border-gray-200 bg-gray-50 rounded-xl px-3.5
-                        focus-within:border-primary focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/20 transition-colors">
+            <form method="GET" action="{{ route('alumnos.index') }}"
+                  class="flex items-center w-full sm:w-72 border border-gray-200 bg-gray-50 rounded-xl px-3.5
+                         focus-within:border-primary focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/20 transition-colors">
                 <i class="fa-solid fa-magnifying-glass text-gray-400 text-xs shrink-0"></i>
-                <input type="text"
-                       x-model="search"
+                <input type="text" name="q" value="{{ $busqueda }}"
                        placeholder="Buscar por nombre, DNI, grado..."
                        class="w-full pl-2.5 py-2 bg-transparent text-sm text-gray-800 focus:outline-none">
-            </div>
+            </form>
         </div>
 
         <div class="overflow-x-auto">
@@ -56,25 +56,31 @@
                 </thead>
                 <tbody class="divide-y divide-gray-50">
                     @forelse ($alumnos as $alumno)
-                        @php $ins = $alumno->inscripcionesPago->first() @endphp
-                        <tr class="hover:bg-gray-50/60 transition-colors"
-                            x-show="!search || $el.dataset.search.includes(search.toLowerCase())"
-                            data-search="{{ strtolower($alumno->nombre_completo . ' ' . $alumno->dni . ' ' . ($ins?->nivelEducativo?->nombre ?? '') . ' ' . ($ins?->grado?->nombre ?? '') . ' ' . ($ins?->seccion?->nombre ?? '') . ' ' . ($alumno->apoderado?->nombre_completo ?? '')) }}">
+                        @php
+                            $ins        = $alumno->inscripcionesPago->first();
+                            $nivel      = $ins?->nivelEducativo?->nombre ?? $alumno->nivelEducativo?->nombre ?? '—';
+                            $grado      = $ins?->grado?->nombre       ?? $alumno->grado?->nombre       ?? '—';
+                            $seccion    = $ins?->seccion               ?? $alumno->seccion;
+                            $sinMatric  = !$ins;
+                        @endphp
+                        <tr class="hover:bg-gray-50/60 transition-colors">
                             <td class="px-5 py-3.5 text-gray-500 text-xs font-mono">{{ $alumno->dni }}</td>
                             <td class="px-5 py-3.5">
                                 <div class="font-semibold text-gray-800 text-sm">{{ $alumno->nombre_completo }}</div>
-                                @if ($alumno->correo)
+                                @if ($sinMatric)
+                                    <span class="inline-flex items-center gap-1 mt-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-100 text-red-600">
+                                        <i class="fa-solid fa-circle-exclamation text-[9px]"></i> Sin matricular
+                                    </span>
+                                @elseif ($alumno->correo)
                                     <div class="text-gray-400 text-xs">{{ $alumno->correo }}</div>
                                 @endif
                             </td>
-                            <td class="px-5 py-3.5 text-gray-600 text-xs">
-                                {{ $ins?->nivelEducativo?->nombre ?? '—' }}
-                            </td>
+                            <td class="px-5 py-3.5 text-gray-600 text-xs">{{ $nivel }}</td>
                             <td class="px-5 py-3.5">
-                                <span class="text-gray-700 text-xs font-medium">{{ $ins?->grado?->nombre ?? '—' }}</span>
-                                @if ($ins?->seccion)
+                                <span class="text-gray-700 text-xs font-medium">{{ $grado }}</span>
+                                @if ($seccion)
                                     <span class="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
-                                        {{ $ins->seccion->nombre }}
+                                        {{ $seccion->nombre }}
                                     </span>
                                 @endif
                             </td>
@@ -86,6 +92,12 @@
                             </td>
                             <td class="px-5 py-3.5">
                                 <div class="flex items-center justify-end gap-2">
+                                    @if ($sinMatric)
+                                        <a href="{{ route('pagos.matricular', ['alumno_id' => $alumno->id]) }}"
+                                           class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-primary bg-green-50 hover:bg-green-100 rounded-lg transition-colors">
+                                            <i class="fa-solid fa-graduation-cap text-[10px]"></i> Matricular
+                                        </a>
+                                    @endif
                                     <a href="{{ route('alumnos.edit', $alumno) }}"
                                        class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors">
                                         <i class="fa-solid fa-pen text-[10px]"></i> Editar
@@ -122,6 +134,12 @@
                 </tbody>
             </table>
         </div>
+
+        @if ($alumnos->hasPages())
+            <div class="px-5 py-4 border-t border-gray-100">
+                {{ $alumnos->links() }}
+            </div>
+        @endif
 
     </div>
 

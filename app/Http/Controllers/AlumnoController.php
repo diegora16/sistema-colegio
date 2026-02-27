@@ -14,13 +14,17 @@ use Illuminate\Http\Request;
 
 class AlumnoController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $anioActivo    = AnioAcademico::where('estado', 'activo')->first();
         $tipoMatricula = TipoPago::where('nombre', 'Matrícula')->first();
+        $busqueda      = $request->input('q', '');
 
         $alumnos = Alumno::with([
             'apoderado',
+            'nivelEducativo',
+            'grado',
+            'seccion',
             'inscripcionesPago' => fn($q) => $q
                 ->when($anioActivo && $tipoMatricula, fn($q2) =>
                     $q2->where('id_año', $anioActivo->id)
@@ -29,14 +33,23 @@ class AlumnoController extends Controller
                 ->with(['grado', 'nivelEducativo', 'seccion']),
         ])
             ->when($anioActivo, fn($q) =>
-                $q->whereHas('inscripcionesPago', fn($q2) => $q2->where('id_año', $anioActivo->id))
+                $q->whereHas('nivelEducativo', fn($q2) => $q2->where('id_año', $anioActivo->id))
+            )
+            ->when($busqueda, fn($q) =>
+                $q->where(fn($q2) =>
+                    $q2->where('nombres',     'like', "%{$busqueda}%")
+                       ->orWhere('apellido_p', 'like', "%{$busqueda}%")
+                       ->orWhere('apellido_m', 'like', "%{$busqueda}%")
+                       ->orWhere('dni',        'like', "%{$busqueda}%")
+                )
             )
             ->orderBy('apellido_p')
             ->orderBy('apellido_m')
             ->orderBy('nombres')
-            ->get();
+            ->paginate(20)
+            ->withQueryString();
 
-        return view('alumnos.index', compact('alumnos', 'anioActivo'));
+        return view('alumnos.index', compact('alumnos', 'anioActivo', 'busqueda'));
     }
 
     public function create()
@@ -101,7 +114,7 @@ class AlumnoController extends Controller
             ]
         );
 
-        Alumno::create([
+        $alumno = Alumno::create([
             'id_apoderado'     => $apoderado->id,
             'id_educativo'     => $request->id_educativo,
             'id_grado'         => $request->id_grado,
@@ -115,8 +128,8 @@ class AlumnoController extends Controller
             'telefono'         => $request->telefono,
         ]);
 
-        return redirect()->route('alumnos.index')
-            ->with('success', "Alumno '{$request->nombres} {$request->apellido_p} {$request->apellido_m}' registrado correctamente.");
+        return redirect()->route('pagos.matricular', ['alumno_id' => $alumno->id])
+            ->with('success', "Alumno '{$request->nombres} {$request->apellido_p} {$request->apellido_m}' registrado. Ahora completa su matrícula.");
     }
 
     public function show(string $id) {}

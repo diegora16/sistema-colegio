@@ -7,15 +7,26 @@ use Illuminate\Http\Request;
 
 class ApoderadoController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $busqueda   = $request->input('q', '');
+
         $apoderados = Apoderado::withCount('alumnos')
+            ->when($busqueda, fn($q) =>
+                $q->where(fn($q2) =>
+                    $q2->where('nombres',     'like', "%{$busqueda}%")
+                       ->orWhere('apellido_p', 'like', "%{$busqueda}%")
+                       ->orWhere('apellido_m', 'like', "%{$busqueda}%")
+                       ->orWhere('dni',        'like', "%{$busqueda}%")
+                )
+            )
             ->orderBy('apellido_p')
             ->orderBy('apellido_m')
             ->orderBy('nombres')
-            ->get();
+            ->paginate(20)
+            ->withQueryString();
 
-        return view('apoderados.index', compact('apoderados'));
+        return view('apoderados.index', compact('apoderados', 'busqueda'));
     }
 
     public function buscarPorDni(Request $request)

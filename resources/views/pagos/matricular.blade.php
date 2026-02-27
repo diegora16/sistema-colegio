@@ -30,13 +30,14 @@
             'matriculado' => in_array($a->id, $yaMatriculados),
         ]);
 
-        // Si hay un old('id_alumno') válido, pre-llenar el campo de texto
-        $oldAlumno = old('id_alumno')
+        // Prioridad: old() (validación fallida) → preseleccionado (recién creado) → vacío
+        $initAlumno = old('id_alumno')
             ? $alumnos->firstWhere('id', old('id_alumno'))
-            : null;
-        $oldTexto  = $oldAlumno
-            ? $oldAlumno->nombre_completo . ' (' . $oldAlumno->dni . ')'
+            : $preseleccionado;
+        $initTexto  = $initAlumno
+            ? $initAlumno->nombre_completo . ' (' . $initAlumno->dni . ')'
             : '';
+        $initId     = $initAlumno ? $initAlumno->id : '';
     @endphp
 
     <div class="max-w-xl">
@@ -72,8 +73,8 @@
                         </label>
 
                         <div x-data="{
-                                q: '{{ $oldTexto }}',
-                                alumnoId: '{{ old('id_alumno', '') }}',
+                                q: '{{ $initTexto }}',
+                                alumnoId: '{{ $initId }}',
                                 abierto: false,
                                 alumnos: {{ \Illuminate\Support\Js::from($alumnosJson) }},
                                 get filtrados() {

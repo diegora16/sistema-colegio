@@ -6,20 +6,20 @@
 
 @section('content')
 
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden" x-data="{ search: '' }">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
 
         <div class="px-5 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
             <p class="text-sm text-gray-500 shrink-0">
-                {{ $apoderados->count() }} {{ $apoderados->count() === 1 ? 'apoderado registrado' : 'apoderados registrados' }}
+                {{ $apoderados->total() }} {{ $apoderados->total() === 1 ? 'apoderado registrado' : 'apoderados registrados' }}
             </p>
-            <div class="flex items-center w-full sm:w-64 border border-gray-200 bg-gray-50 rounded-xl px-3.5
-                        focus-within:border-primary focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/20 transition-colors">
+            <form method="GET" action="{{ route('apoderados.index') }}"
+                  class="flex items-center w-full sm:w-64 border border-gray-200 bg-gray-50 rounded-xl px-3.5
+                         focus-within:border-primary focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/20 transition-colors">
                 <i class="fa-solid fa-magnifying-glass text-gray-400 text-xs shrink-0"></i>
-                <input type="text"
-                       x-model="search"
+                <input type="text" name="q" value="{{ $busqueda }}"
                        placeholder="Buscar por nombre o DNI..."
                        class="w-full pl-2.5 py-2 bg-transparent text-sm text-gray-800 focus:outline-none">
-            </div>
+            </form>
         </div>
 
         <div class="overflow-x-auto">
@@ -36,9 +36,7 @@
                 </thead>
                 <tbody class="divide-y divide-gray-50">
                     @forelse ($apoderados as $apoderado)
-                        <tr class="hover:bg-gray-50/60 transition-colors"
-                            x-show="!search || $el.dataset.search.includes(search.toLowerCase())"
-                            data-search="{{ strtolower($apoderado->nombres . ' ' . $apoderado->apellido_p . ' ' . $apoderado->apellido_m . ' ' . $apoderado->dni) }}">
+                        <tr class="hover:bg-gray-50/60 transition-colors">
                             <td class="px-5 py-3.5 text-gray-500 text-xs font-mono">{{ $apoderado->dni }}</td>
                             <td class="px-5 py-3.5 font-semibold text-gray-800">
                                 {{ $apoderado->nombres }} {{ $apoderado->apellido_p }} {{ $apoderado->apellido_m }}
@@ -71,6 +69,12 @@
                 </tbody>
             </table>
         </div>
+
+        @if ($apoderados->hasPages())
+            <div class="px-5 py-4 border-t border-gray-100">
+                {{ $apoderados->links() }}
+            </div>
+        @endif
 
     </div>
 

@@ -61,7 +61,7 @@
 
         <div class="px-5 py-4 border-b border-gray-100">
             <p class="text-sm text-gray-500">
-                {{ $inscripciones->count() }} {{ $inscripciones->count() === 1 ? 'inscripción' : 'inscripciones' }}
+                {{ $inscripciones->total() }} {{ $inscripciones->total() === 1 ? 'inscripción' : 'inscripciones' }}
                 @if ($anioActivo)
                     <span class="text-gray-400">— Año {{ $anioActivo->nombre }}</span>
                 @endif
@@ -142,6 +142,12 @@
                 </tbody>
             </table>
         </div>
+
+        @if ($inscripciones->hasPages())
+            <div class="px-5 py-4 border-t border-gray-100">
+                {{ $inscripciones->links() }}
+            </div>
+        @endif
 
     </div>
 
