@@ -184,6 +184,8 @@ class PagoController extends Controller
         InscripcionPago::create([
             'id_alumno'      => $matricula->id_alumno,
             'id_seccion'     => $matricula->id_seccion,
+            'id_grado'       => $matricula->id_grado,
+            'id_educativo'   => $matricula->id_educativo,
             'id_año'         => $matricula->id_año,
             'id_tipo_pago'   => $tipoMensualidad->id,
             'id_mes'         => $mesRecord->id,

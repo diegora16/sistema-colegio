@@ -20,6 +20,7 @@ class Alumno extends Model
         'fecha_nacimiento',
         'correo',
         'telefono',
+        'estado',
     ];
 
     protected $casts = [

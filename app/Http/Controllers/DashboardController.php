@@ -77,9 +77,9 @@ class DashboardController extends Controller
             'total' => $pagosPorMes->get($num, 0),
         ])->values()->toArray();
 
-        // ── Gráfico 2: Alumnos por nivel educativo ───────────────────────────
+        // ── Gráfico 2: Alumnos activos por nivel educativo ───────────────────
         $alumnosPorNivel = NivelEducativo::where('id_año', $anioActivo->id)
-            ->withCount('alumnos')
+            ->withCount(['alumnos' => fn($q) => $q->where('estado', 'activo')])
             ->orderBy('nombre')
             ->get()
             ->filter(fn($n) => $n->alumnos_count > 0)

@@ -8,6 +8,7 @@ use App\Models\Grado;
 use App\Models\InscripcionPago;
 use App\Models\Mes;
 use App\Models\NivelEducativo;
+use App\Models\Pago;
 use App\Models\Seccion;
 use App\Models\TipoPago;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -46,6 +47,7 @@ class ReporteController extends Controller
                 )
                 ->with(['grado', 'nivelEducativo', 'seccion']),
         ])
+            ->where('estado', 'activo')
             ->when($anioActivo && $tipoMatricula, fn($q) =>
                 $q->whereHas('inscripcionesPago', fn($q2) =>
                     $q2->where('id_año', $anioActivo->id)
@@ -80,6 +82,7 @@ class ReporteController extends Controller
                 )
                 ->with(['grado', 'nivelEducativo', 'seccion']),
         ])
+            ->where('estado', 'activo')
             ->when($anioActivo && $tipoMatricula, fn($q) =>
                 $q->whereHas('inscripcionesPago', fn($q2) =>
                     $q2->where('id_año', $anioActivo->id)
@@ -249,5 +252,71 @@ class ReporteController extends Controller
         $nombreArchivo = 'pagos-' . str($alumno->apellido_p)->slug() . '-' . $alumno->dni . '-' . now()->format('Y-m-d') . '.pdf';
 
         return $pdf->download($nombreArchivo);
+    }
+
+    // ── Reporte 4: Ingresos totales por año ────────────────────────────────────
+    public function ingresos(Request $request)
+    {
+        $anios = AnioAcademico::orderByDesc('nombre')->get();
+
+        // Año seleccionado: el que pide el usuario, o el activo, o el primero disponible
+        $anioId = $request->input('anio');
+        $anio   = $anioId
+            ? AnioAcademico::find($anioId)
+            : (AnioAcademico::where('estado', 'activo')->first() ?? $anios->first());
+
+        $ingresosPorMes = $this->calcularIngresosPorMes($anio);
+        $totalGeneral   = array_sum(array_column($ingresosPorMes, 'total'));
+
+        return view('reportes.ingresos', compact('anios', 'anio', 'ingresosPorMes', 'totalGeneral'));
+    }
+
+    public function ingresosPdf(Request $request)
+    {
+        $anios  = AnioAcademico::orderByDesc('nombre')->get();
+        $anioId = $request->input('anio');
+        $anio   = $anioId
+            ? AnioAcademico::find($anioId)
+            : (AnioAcademico::where('estado', 'activo')->first() ?? $anios->first());
+
+        $ingresosPorMes = $this->calcularIngresosPorMes($anio);
+        $totalGeneral   = array_sum(array_column($ingresosPorMes, 'total'));
+
+        $pdf = Pdf::loadView('reportes.pdf.ingresos', compact(
+            'anio', 'ingresosPorMes', 'totalGeneral'
+        ))->setPaper('a4', 'portrait');
+
+        return $pdf->download('reporte-ingresos-' . ($anio->nombre ?? now()->year) . '.pdf');
+    }
+
+    /**
+     * Agrupa los pagos recibidos del año académico indicado por mes de pago (pago.fecha).
+     * Devuelve un array de 12 elementos [mes, total] para Enero–Diciembre.
+     */
+    private function calcularIngresosPorMes(?AnioAcademico $anio): array
+    {
+        $nombresMes = [
+            1 => 'Enero', 2 => 'Febrero', 3 => 'Marzo',    4 => 'Abril',
+            5 => 'Mayo',  6 => 'Junio',   7 => 'Julio',    8 => 'Agosto',
+            9 => 'Septiembre', 10 => 'Octubre', 11 => 'Noviembre', 12 => 'Diciembre',
+        ];
+
+        $totalesPorMes = $anio
+            ? Pago::selectRaw('MONTH(fecha) as mes_num, SUM(aporte) as total')
+                ->whereHas('inscripcionPago', fn($q) => $q->where('id_año', $anio->id))
+                ->groupByRaw('MONTH(fecha)')
+                ->orderByRaw('MONTH(fecha)')
+                ->pluck('total', 'mes_num')
+            : collect();
+
+        $resultado = [];
+        for ($i = 1; $i <= 12; $i++) {
+            $resultado[] = [
+                'mes'   => $nombresMes[$i],
+                'total' => (float) ($totalesPorMes[$i] ?? 0),
+            ];
+        }
+
+        return $resultado;
     }
 }

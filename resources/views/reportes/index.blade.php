@@ -6,7 +6,7 @@
 
 @section('content')
 
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
 
     {{-- Tarjeta 1: Alumnos Matriculados --}}
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col gap-4 hover:shadow-md transition-shadow">
@@ -68,6 +68,28 @@
             matrícula y todas sus mensualidades.
         </p>
         <a href="{{ route('reportes.pagos_alumno') }}"
+           class="mt-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary-dark text-white text-sm font-semibold rounded-lg transition-colors shadow-sm">
+            <i class="fa-solid fa-arrow-right text-xs"></i>
+            Ver Reporte
+        </a>
+    </div>
+
+    {{-- Tarjeta 4: Ingresos por Año --}}
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col gap-4 hover:shadow-md transition-shadow">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                <i class="fa-solid fa-sack-dollar text-emerald-600 text-xl"></i>
+            </div>
+            <div>
+                <h3 class="font-semibold text-gray-800 text-base leading-tight">Ingresos por Año</h3>
+                <p class="text-xs text-gray-400 mt-0.5">Total cobrado mes a mes</p>
+            </div>
+        </div>
+        <p class="text-sm text-gray-500 leading-relaxed">
+            Resume todos los cobros recibidos por mes (Enero–Diciembre) de cualquier
+            año académico, incluyendo el total general.
+        </p>
+        <a href="{{ route('reportes.ingresos') }}"
            class="mt-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-primary hover:bg-primary-dark text-white text-sm font-semibold rounded-lg transition-colors shadow-sm">
             <i class="fa-solid fa-arrow-right text-xs"></i>
             Ver Reporte

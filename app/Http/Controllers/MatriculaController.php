@@ -17,6 +17,7 @@ class MatriculaController extends Controller
         $tipoMatricula = TipoPago::where('nombre', 'Matrícula')->first();
 
         $alumnos = Alumno::with(['nivelEducativo', 'grado', 'seccion'])
+            ->where('estado', 'activo')
             ->when($anioActivo, function ($q) use ($anioActivo) {
                 $q->whereHas('nivelEducativo', fn($q2) => $q2->where('id_año', $anioActivo->id));
             })

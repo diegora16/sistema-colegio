@@ -16,40 +16,68 @@ class AlumnoController extends Controller
 {
     public function index(Request $request)
     {
-        $anioActivo    = AnioAcademico::where('estado', 'activo')->first();
-        $tipoMatricula = TipoPago::where('nombre', 'Matrícula')->first();
-        $busqueda      = $request->input('q', '');
+        $anioActivo   = AnioAcademico::where('estado', 'activo')->first();
+        $busqueda     = $request->input('q', '');
+        $verInactivos = $request->boolean('inactivos', false);
 
-        $alumnos = Alumno::with([
-            'apoderado',
-            'nivelEducativo',
-            'grado',
-            'seccion',
-            'inscripcionesPago' => fn($q) => $q
-                ->when($anioActivo && $tipoMatricula, fn($q2) =>
-                    $q2->where('id_año', $anioActivo->id)
-                       ->where('id_tipo_pago', $tipoMatricula->id)
+        if ($verInactivos) {
+            // Vista inactivos: retirados y egresados, sin filtro de año
+            $alumnos = Alumno::with([
+                'apoderado',
+                'nivelEducativo.anioAcademico',
+                'grado',
+                'seccion',
+            ])
+                ->whereIn('estado', ['retirado', 'egresado'])
+                ->when($busqueda, fn($q) =>
+                    $q->where(fn($q2) =>
+                        $q2->where('nombres',     'like', "%{$busqueda}%")
+                           ->orWhere('apellido_p', 'like', "%{$busqueda}%")
+                           ->orWhere('apellido_m', 'like', "%{$busqueda}%")
+                           ->orWhere('dni',        'like', "%{$busqueda}%")
+                    )
                 )
-                ->with(['grado', 'nivelEducativo', 'seccion']),
-        ])
-            ->when($anioActivo, fn($q) =>
-                $q->whereHas('nivelEducativo', fn($q2) => $q2->where('id_año', $anioActivo->id))
-            )
-            ->when($busqueda, fn($q) =>
-                $q->where(fn($q2) =>
-                    $q2->where('nombres',     'like', "%{$busqueda}%")
-                       ->orWhere('apellido_p', 'like', "%{$busqueda}%")
-                       ->orWhere('apellido_m', 'like', "%{$busqueda}%")
-                       ->orWhere('dni',        'like', "%{$busqueda}%")
-                )
-            )
-            ->orderBy('apellido_p')
-            ->orderBy('apellido_m')
-            ->orderBy('nombres')
-            ->paginate(20)
-            ->withQueryString();
+                ->orderBy('apellido_p')
+                ->orderBy('apellido_m')
+                ->orderBy('nombres')
+                ->paginate(20)
+                ->withQueryString();
+        } else {
+            // Vista activos: solo estado=activo del año académico activo
+            $tipoMatricula = TipoPago::where('nombre', 'Matrícula')->first();
 
-        return view('alumnos.index', compact('alumnos', 'anioActivo', 'busqueda'));
+            $alumnos = Alumno::with([
+                'apoderado',
+                'nivelEducativo',
+                'grado',
+                'seccion',
+                'inscripcionesPago' => fn($q) => $q
+                    ->when($anioActivo && $tipoMatricula, fn($q2) =>
+                        $q2->where('id_año', $anioActivo->id)
+                           ->where('id_tipo_pago', $tipoMatricula->id)
+                    )
+                    ->with(['grado', 'nivelEducativo', 'seccion']),
+            ])
+                ->where('estado', 'activo')
+                ->when($anioActivo, fn($q) =>
+                    $q->whereHas('nivelEducativo', fn($q2) => $q2->where('id_año', $anioActivo->id))
+                )
+                ->when($busqueda, fn($q) =>
+                    $q->where(fn($q2) =>
+                        $q2->where('nombres',     'like', "%{$busqueda}%")
+                           ->orWhere('apellido_p', 'like', "%{$busqueda}%")
+                           ->orWhere('apellido_m', 'like', "%{$busqueda}%")
+                           ->orWhere('dni',        'like', "%{$busqueda}%")
+                    )
+                )
+                ->orderBy('apellido_p')
+                ->orderBy('apellido_m')
+                ->orderBy('nombres')
+                ->paginate(20)
+                ->withQueryString();
+        }
+
+        return view('alumnos.index', compact('alumnos', 'anioActivo', 'busqueda', 'verInactivos'));
     }
 
     public function create()
@@ -224,13 +252,13 @@ class AlumnoController extends Controller
             return redirect()->route('alumnos.index')->with('error', 'No hay año académico activo.');
         }
 
-        // Alumnos cuyo id_educativo apunta a un año distinto al activo
+        // Solo alumnos activos cuyo nivel apunta a un año distinto al activo
         $alumnos = Alumno::with(['nivelEducativo.anioAcademico', 'grado', 'seccion'])
+            ->where('estado', 'activo')
             ->whereHas('nivelEducativo', fn($q) => $q->where('id_año', '!=', $anioActivo->id))
             ->orderBy('apellido_p')->orderBy('apellido_m')->orderBy('nombres')
             ->get();
 
-        // Calcular siguiente grado para cada alumno
         foreach ($alumnos as $alumno) {
             $nivelActual = $alumno->nivelEducativo?->nombre;
             $gradoActual = $alumno->grado?->nombre;
@@ -239,12 +267,12 @@ class AlumnoController extends Controller
                 : null;
 
             if ($siguiente) {
-                $nuevoNivel          = NivelEducativo::where('nombre', $siguiente['nivel'])->where('id_año', $anioActivo->id)->first();
-                $alumno->nuevoNivel  = $nuevoNivel;
-                $alumno->nuevoGrado  = $nuevoNivel
+                $nuevoNivel         = NivelEducativo::where('nombre', $siguiente['nivel'])->where('id_año', $anioActivo->id)->first();
+                $alumno->nuevoNivel = $nuevoNivel;
+                $alumno->nuevoGrado = $nuevoNivel
                     ? Grado::where('nombre', $siguiente['grado'])->where('id_educativo', $nuevoNivel->id)->first()
                     : null;
-                $alumno->egresa      = false;
+                $alumno->egresa     = false;
             } else {
                 $alumno->nuevoNivel = null;
                 $alumno->nuevoGrado = null;
@@ -258,15 +286,22 @@ class AlumnoController extends Controller
         return view('alumnos.promover', compact('anioActivo', 'porPromover', 'egresados'));
     }
 
-    public function promoverEjecutar()
+    public function promoverEjecutar(Request $request)
     {
         $anioActivo = AnioAcademico::where('estado', 'activo')->firstOrFail();
 
+        // Solo alumnos activos pendientes de migrar al año activo
         $alumnos = Alumno::with(['nivelEducativo', 'grado'])
+            ->where('estado', 'activo')
             ->whereHas('nivelEducativo', fn($q) => $q->where('id_año', '!=', $anioActivo->id))
             ->get();
 
-        $promovidos = 0;
+        $promoverIds        = collect($request->input('promover_ids', []))->map(fn($id) => (int) $id);
+        $repetirEgresadoIds = collect($request->input('repetir_egresado_ids', []))->map(fn($id) => (int) $id);
+
+        $promovidos           = 0;
+        $repitentes           = 0;
+        $egresadosConfirmados = 0;
 
         foreach ($alumnos as $alumno) {
             $nivelActual = $alumno->nivelEducativo?->nombre;
@@ -274,25 +309,98 @@ class AlumnoController extends Controller
             if (!$nivelActual || !$gradoActual) continue;
 
             $siguiente = AnioService::siguienteGrado($nivelActual, $gradoActual);
-            if (!$siguiente) continue; // egresa — no se promueve automáticamente
 
-            $nuevoNivel = NivelEducativo::where('nombre', $siguiente['nivel'])->where('id_año', $anioActivo->id)->first();
-            if (!$nuevoNivel) continue;
+            if ($siguiente) {
+                // ── Alumno promovible ──────────────────────────────────────────
+                if ($promoverIds->contains($alumno->id)) {
+                    // Avanzar al siguiente grado
+                    $nuevoNivel = NivelEducativo::where('nombre', $siguiente['nivel'])->where('id_año', $anioActivo->id)->first();
+                    if (!$nuevoNivel) continue;
 
-            $nuevoGrado = Grado::where('nombre', $siguiente['grado'])->where('id_educativo', $nuevoNivel->id)->first();
-            if (!$nuevoGrado) continue;
+                    $nuevoGrado = Grado::where('nombre', $siguiente['grado'])->where('id_educativo', $nuevoNivel->id)->first();
+                    if (!$nuevoGrado) continue;
 
-            $alumno->update([
-                'id_educativo' => $nuevoNivel->id,
-                'id_grado'     => $nuevoGrado->id,
-                'id_seccion'   => null,
-            ]);
+                    $alumno->update([
+                        'id_educativo' => $nuevoNivel->id,
+                        'id_grado'     => $nuevoGrado->id,
+                        'id_seccion'   => null,
+                    ]);
+                    $promovidos++;
+                } else {
+                    // Repetir el mismo grado en el año activo
+                    $mismoNivel = NivelEducativo::where('nombre', $nivelActual)->where('id_año', $anioActivo->id)->first();
+                    if (!$mismoNivel) continue;
 
-            $promovidos++;
+                    $mismoGrado = Grado::where('nombre', $gradoActual)->where('id_educativo', $mismoNivel->id)->first();
+                    if (!$mismoGrado) continue;
+
+                    $alumno->update([
+                        'id_educativo' => $mismoNivel->id,
+                        'id_grado'     => $mismoGrado->id,
+                        'id_seccion'   => null,
+                    ]);
+                    $repitentes++;
+                }
+            } else {
+                // ── Egresado (5° Secundaria) ───────────────────────────────────
+                if ($repetirEgresadoIds->contains($alumno->id)) {
+                    // Repetirá 5° Secundaria en el año activo
+                    $mismoNivel = NivelEducativo::where('nombre', $nivelActual)->where('id_año', $anioActivo->id)->first();
+                    if (!$mismoNivel) continue;
+
+                    $mismoGrado = Grado::where('nombre', $gradoActual)->where('id_educativo', $mismoNivel->id)->first();
+                    if (!$mismoGrado) continue;
+
+                    $alumno->update([
+                        'id_educativo' => $mismoNivel->id,
+                        'id_grado'     => $mismoGrado->id,
+                        'id_seccion'   => null,
+                    ]);
+                    $repitentes++;
+                } else {
+                    // Egreso confirmado — marcar como egresado
+                    $alumno->update(['estado' => 'egresado']);
+                    $egresadosConfirmados++;
+                }
+            }
         }
 
-        return redirect()->route('alumnos.index')
-            ->with('success', "{$promovidos} " . ($promovidos === 1 ? 'alumno promovido' : 'alumnos promovidos') . " correctamente al año {$anioActivo->nombre}. Recuerda asignarles su sección.");
+        $partes = [];
+        if ($promovidos > 0) {
+            $partes[] = "{$promovidos} " . ($promovidos === 1 ? 'alumno promovido' : 'alumnos promovidos');
+        }
+        if ($repitentes > 0) {
+            $partes[] = "{$repitentes} " . ($repitentes === 1 ? 'alumno marcado como repitente' : 'alumnos marcados como repitentes');
+        }
+        if ($egresadosConfirmados > 0) {
+            $partes[] = "{$egresadosConfirmados} " . ($egresadosConfirmados === 1 ? 'egresado confirmado' : 'egresados confirmados');
+        }
+
+        if (empty($partes)) {
+            return redirect()->route('alumnos.index')
+                ->with('error', 'No se procesó ningún alumno. Verifica que los niveles del año activo estén configurados correctamente.');
+        }
+
+        $msg = implode(', ', $partes) . " en el año {$anioActivo->nombre}.";
+        if ($promovidos + $repitentes > 0) {
+            $msg .= ' Recuerda asignarles su sección.';
+        }
+
+        return redirect()->route('alumnos.index')->with('success', $msg);
+    }
+
+    public function darDeBaja(Alumno $alumno)
+    {
+        $alumno->update(['estado' => 'retirado']);
+
+        return back()->with('success', "'{$alumno->nombre_completo}' dado de baja. Puedes reactivarlo desde la lista de alumnos inactivos.");
+    }
+
+    public function reactivar(Alumno $alumno)
+    {
+        $alumno->update(['estado' => 'activo']);
+
+        return back()->with('success', "'{$alumno->nombre_completo}' reactivado. Si su nivel es de un año anterior, aparecerá en 'Promover Alumnos' para asignarle el grado del año activo.");
     }
 
     public function destroy(Alumno $alumno)

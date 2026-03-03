@@ -35,8 +35,10 @@ Route::middleware('auth')->group(function () {
     });
 
     // ── Alumnos ──────────────────────────────────────────────────────────────
-    Route::get( '/alumnos/promover', 'App\Http\Controllers\AlumnoController@promoverForm')->name('alumnos.promover');
-    Route::post('/alumnos/promover', 'App\Http\Controllers\AlumnoController@promoverEjecutar')->name('alumnos.promover.ejecutar');
+    Route::get(  '/alumnos/promover',          'App\Http\Controllers\AlumnoController@promoverForm')    ->name('alumnos.promover');
+    Route::post( '/alumnos/promover',          'App\Http\Controllers\AlumnoController@promoverEjecutar')->name('alumnos.promover.ejecutar');
+    Route::patch('/alumnos/{alumno}/dar-baja', 'App\Http\Controllers\AlumnoController@darDeBaja')       ->name('alumnos.dar_baja');
+    Route::patch('/alumnos/{alumno}/reactivar','App\Http\Controllers\AlumnoController@reactivar')       ->name('alumnos.reactivar');
     Route::resource('alumnos',    'App\Http\Controllers\AlumnoController');
     Route::get('/apoderados/buscar', 'App\Http\Controllers\ApoderadoController@buscarPorDni')
         ->name('apoderados.buscar');
@@ -63,6 +65,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/morosidad/pdf',    'App\Http\Controllers\ReporteController@morosidadPdf')      ->name('morosidad.pdf');
         Route::get('/pagos-alumno',     'App\Http\Controllers\ReporteController@pagosPorAlumno')    ->name('pagos_alumno');
         Route::get('/pagos-alumno/pdf', 'App\Http\Controllers\ReporteController@pagosPorAlumnoPdf')->name('pagos_alumno.pdf');
+        Route::get('/ingresos',         'App\Http\Controllers\ReporteController@ingresos')         ->name('ingresos');
+        Route::get('/ingresos/pdf',     'App\Http\Controllers\ReporteController@ingresosPdf')      ->name('ingresos.pdf');
     });
 
 });
