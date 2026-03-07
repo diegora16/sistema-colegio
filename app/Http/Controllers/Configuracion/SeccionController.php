@@ -31,9 +31,15 @@ class SeccionController extends Controller
 
     public function create()
     {
-        $niveles = NivelEducativo::with('anioAcademico')->orderBy('nombre')->get();
-        $grados  = Grado::orderBy('nombre')->get(['id', 'id_educativo', 'nombre']);
-        return view('configuracion.secciones.create', compact('niveles', 'grados'));
+        $anioActivo = AnioAcademico::where('estado', 'activo')->first();
+        $niveles    = $anioActivo
+            ? NivelEducativo::where('id_año', $anioActivo->id)->orderBy('nombre')->get()
+            : collect();
+        $grados     = $anioActivo
+            ? Grado::whereHas('nivelEducativo', fn($q) => $q->where('id_año', $anioActivo->id))
+                    ->orderBy('nombre')->get(['id', 'id_educativo', 'nombre'])
+            : collect();
+        return view('configuracion.secciones.create', compact('niveles', 'grados', 'anioActivo'));
     }
 
     public function store(Request $request)
@@ -59,9 +65,15 @@ class SeccionController extends Controller
 
     public function edit(Seccion $seccion)
     {
-        $niveles = NivelEducativo::with('anioAcademico')->orderBy('nombre')->get();
-        $grados  = Grado::orderBy('nombre')->get(['id', 'id_educativo', 'nombre']);
-        return view('configuracion.secciones.edit', compact('seccion', 'niveles', 'grados'));
+        $anioActivo = AnioAcademico::where('estado', 'activo')->first();
+        $niveles    = $anioActivo
+            ? NivelEducativo::where('id_año', $anioActivo->id)->orderBy('nombre')->get()
+            : collect();
+        $grados     = $anioActivo
+            ? Grado::whereHas('nivelEducativo', fn($q) => $q->where('id_año', $anioActivo->id))
+                    ->orderBy('nombre')->get(['id', 'id_educativo', 'nombre'])
+            : collect();
+        return view('configuracion.secciones.edit', compact('seccion', 'niveles', 'grados', 'anioActivo'));
     }
 
     public function update(Request $request, Seccion $seccion)

@@ -149,7 +149,7 @@
                     <td class="bold">{{ $alumno->nombre_completo }}</td>
                     <td>{{ $ins?->nivelEducativo?->nombre ?? '—' }}</td>
                     <td>{{ $ins?->grado?->nombre ?? '—' }}</td>
-                    <td>{{ $ins?->seccion?->nombre ?? '—' }}</td>
+                    <td>{{ $ins?->seccion?->nombre ?? $alumno->seccion?->nombre ?? '—' }}</td>
                     <td>{{ $alumno->apoderado?->nombre_completo ?? '—' }}</td>
                     <td class="mono">{{ $alumno->apoderado?->telefono ?? '—' }}</td>
                 </tr>

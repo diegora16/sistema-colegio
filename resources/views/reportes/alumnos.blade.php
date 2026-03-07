@@ -112,7 +112,7 @@
                             </td>
                             <td class="px-5 py-3.5 text-gray-600 text-xs">{{ $ins?->nivelEducativo?->nombre ?? '—' }}</td>
                             <td class="px-5 py-3.5 text-gray-600 text-xs">{{ $ins?->grado?->nombre ?? '—' }}</td>
-                            <td class="px-5 py-3.5 text-gray-600 text-xs">{{ $ins?->seccion?->nombre ?? '—' }}</td>
+                            <td class="px-5 py-3.5 text-gray-600 text-xs">{{ $ins?->seccion?->nombre ?? $alumno->seccion?->nombre ?? '—' }}</td>
                             <td class="px-5 py-3.5 text-gray-600 text-xs">{{ $alumno->apoderado?->nombre_completo ?? '—' }}</td>
                             <td class="px-5 py-3.5 text-gray-500 text-xs font-mono">{{ $alumno->apoderado?->telefono ?? '—' }}</td>
                         </tr>

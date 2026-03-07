@@ -63,52 +63,56 @@
             </a>
             @endif
 
-            {{-- Configuración (colapsable) --}}
-            <div x-data="{ open: {{ request()->routeIs('configuracion.*') ? 'true' : 'false' }} }">
-                <button @click="open = !open"
-                        class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-[13px] font-medium transition-colors duration-150
-                               {{ request()->routeIs('configuracion.*') ? 'bg-primary-darker text-white' : 'text-white/70 hover:bg-primary-dark hover:text-white' }}">
-                    <span class="flex items-center gap-3">
-                        <i class="fa-solid fa-sliders w-4 text-center text-[11px]"></i>
-                        Configuración
-                    </span>
-                    <i class="fa-solid fa-chevron-right text-[10px] transition-transform duration-200 flex-shrink-0"
-                       :class="open ? 'rotate-90' : ''"></i>
-                </button>
-                <div x-show="open" x-cloak
-                     x-transition:enter="transition ease-out duration-150"
-                     x-transition:enter-start="opacity-0 -translate-y-1"
-                     x-transition:enter-end="opacity-100 translate-y-0"
-                     x-transition:leave="transition ease-in duration-100"
-                     x-transition:leave-start="opacity-100 translate-y-0"
-                     x-transition:leave-end="opacity-0 -translate-y-1"
-                     class="mt-0.5 ml-3 pl-3 border-l border-primary-dark space-y-0.5">
-                    <a href="{{ route('configuracion.anios.index') }}"
-                       class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors duration-150
-                              {{ request()->routeIs('configuracion.anios.*') ? 'bg-primary-darker text-white' : 'text-white/60 hover:bg-primary-dark hover:text-white' }}">
-                        <i class="fa-solid fa-calendar-days w-3.5 text-center text-[10px]"></i>
-                        Año Académico
-                    </a>
-                    <a href="{{ route('configuracion.niveles.index') }}"
-                       class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors duration-150
-                              {{ request()->routeIs('configuracion.niveles.*') ? 'bg-primary-darker text-white' : 'text-white/60 hover:bg-primary-dark hover:text-white' }}">
-                        <i class="fa-solid fa-layer-group w-3.5 text-center text-[10px]"></i>
-                        Nivel Educativo
-                    </a>
-                    <a href="{{ route('configuracion.grados.index') }}"
-                       class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors duration-150
-                              {{ request()->routeIs('configuracion.grados.*') ? 'bg-primary-darker text-white' : 'text-white/60 hover:bg-primary-dark hover:text-white' }}">
-                        <i class="fa-solid fa-list-ol w-3.5 text-center text-[10px]"></i>
-                        Grados
-                    </a>
-                    <a href="{{ route('configuracion.secciones.index') }}"
-                       class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors duration-150
-                              {{ request()->routeIs('configuracion.secciones.*') ? 'bg-primary-darker text-white' : 'text-white/60 hover:bg-primary-dark hover:text-white' }}">
-                        <i class="fa-solid fa-door-open w-3.5 text-center text-[10px]"></i>
-                        Secciones
-                    </a>
+            {{-- Año Académico (siempre visible) --}}
+            <a href="{{ route('configuracion.anios.index') }}"
+               class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-colors duration-150
+                      {{ request()->routeIs('configuracion.anios.*') ? 'bg-primary-darker text-white' : 'text-white/70 hover:bg-primary-dark hover:text-white' }}">
+                <i class="fa-solid fa-calendar-days w-4 text-center text-[11px]"></i>
+                Año Académico
+            </a>
+
+            {{-- Configuración: Nivel, Grados, Secciones (solo año actual) --}}
+            @if (!$modoLectura)
+                <div x-data="{ open: {{ request()->routeIs('configuracion.niveles.*') || request()->routeIs('configuracion.grados.*') || request()->routeIs('configuracion.secciones.*') ? 'true' : 'false' }} }">
+                    <button @click="open = !open"
+                            class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-[13px] font-medium transition-colors duration-150
+                                   {{ request()->routeIs('configuracion.niveles.*') || request()->routeIs('configuracion.grados.*') || request()->routeIs('configuracion.secciones.*') ? 'bg-primary-darker text-white' : 'text-white/70 hover:bg-primary-dark hover:text-white' }}">
+                        <span class="flex items-center gap-3">
+                            <i class="fa-solid fa-sliders w-4 text-center text-[11px]"></i>
+                            Configuración
+                        </span>
+                        <i class="fa-solid fa-chevron-right text-[10px] transition-transform duration-200 flex-shrink-0"
+                           :class="open ? 'rotate-90' : ''"></i>
+                    </button>
+                    <div x-show="open" x-cloak
+                         x-transition:enter="transition ease-out duration-150"
+                         x-transition:enter-start="opacity-0 -translate-y-1"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-100"
+                         x-transition:leave-start="opacity-100 translate-y-0"
+                         x-transition:leave-end="opacity-0 -translate-y-1"
+                         class="mt-0.5 ml-3 pl-3 border-l border-primary-dark space-y-0.5">
+                        <a href="{{ route('configuracion.niveles.index') }}"
+                           class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors duration-150
+                                  {{ request()->routeIs('configuracion.niveles.*') ? 'bg-primary-darker text-white' : 'text-white/60 hover:bg-primary-dark hover:text-white' }}">
+                            <i class="fa-solid fa-layer-group w-3.5 text-center text-[10px]"></i>
+                            Nivel Educativo
+                        </a>
+                        <a href="{{ route('configuracion.grados.index') }}"
+                           class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors duration-150
+                                  {{ request()->routeIs('configuracion.grados.*') ? 'bg-primary-darker text-white' : 'text-white/60 hover:bg-primary-dark hover:text-white' }}">
+                            <i class="fa-solid fa-list-ol w-3.5 text-center text-[10px]"></i>
+                            Grados
+                        </a>
+                        <a href="{{ route('configuracion.secciones.index') }}"
+                           class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors duration-150
+                                  {{ request()->routeIs('configuracion.secciones.*') ? 'bg-primary-darker text-white' : 'text-white/60 hover:bg-primary-dark hover:text-white' }}">
+                            <i class="fa-solid fa-door-open w-3.5 text-center text-[10px]"></i>
+                            Secciones
+                        </a>
+                    </div>
                 </div>
-            </div>
+            @endif
 
             {{-- Alumnos y Pagos: solo en año actual --}}
             @if (!$modoLectura)

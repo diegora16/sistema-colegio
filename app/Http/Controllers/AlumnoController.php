@@ -240,6 +240,14 @@ class AlumnoController extends Controller
             'telefono'         => $request->telefono,
         ]);
 
+        // Sincronizar sección en las inscripciones del año activo
+        $anioActivo = AnioAcademico::where('estado', 'activo')->first();
+        if ($anioActivo) {
+            \App\Models\InscripcionPago::where('id_alumno', $alumno->id)
+                ->where('id_año', $anioActivo->id)
+                ->update(['id_seccion' => $request->id_seccion]);
+        }
+
         return redirect()->route('alumnos.index')
             ->with('success', 'Alumno actualizado correctamente.');
     }

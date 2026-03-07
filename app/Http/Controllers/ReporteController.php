@@ -40,6 +40,7 @@ class ReporteController extends Controller
 
         $alumnos = Alumno::with([
             'apoderado',
+            'seccion',
             'inscripcionesPago' => fn($q) => $q
                 ->when($anioActivo && $tipoMatricula, fn($q2) =>
                     $q2->where('id_año', $anioActivo->id)
@@ -55,7 +56,15 @@ class ReporteController extends Controller
                        ->where('estado', 'pagado')
                        ->when($request->filled('nivel'),   fn($q3) => $q3->where('id_educativo', $request->nivel))
                        ->when($request->filled('grado'),   fn($q3) => $q3->where('id_grado',     $request->grado))
-                       ->when($request->filled('seccion'), fn($q3) => $q3->where('id_seccion',   $request->seccion))
+                       ->when($request->filled('seccion'), fn($q3) =>
+                           $q3->where(fn($q4) =>
+                               $q4->where('id_seccion', $request->seccion)
+                                  ->orWhere(fn($q5) =>
+                                      $q5->whereNull('id_seccion')
+                                         ->whereHas('alumno', fn($q6) => $q6->where('id_seccion', $request->seccion))
+                                  )
+                           )
+                       )
                 )
             )
             ->orderBy('apellido_p')
@@ -75,6 +84,7 @@ class ReporteController extends Controller
 
         $alumnos = Alumno::with([
             'apoderado',
+            'seccion',
             'inscripcionesPago' => fn($q) => $q
                 ->when($anioActivo && $tipoMatricula, fn($q2) =>
                     $q2->where('id_año', $anioActivo->id)
@@ -90,7 +100,15 @@ class ReporteController extends Controller
                        ->where('estado', 'pagado')
                        ->when($request->filled('nivel'),   fn($q3) => $q3->where('id_educativo', $request->nivel))
                        ->when($request->filled('grado'),   fn($q3) => $q3->where('id_grado',     $request->grado))
-                       ->when($request->filled('seccion'), fn($q3) => $q3->where('id_seccion',   $request->seccion))
+                       ->when($request->filled('seccion'), fn($q3) =>
+                           $q3->where(fn($q4) =>
+                               $q4->where('id_seccion', $request->seccion)
+                                  ->orWhere(fn($q5) =>
+                                      $q5->whereNull('id_seccion')
+                                         ->whereHas('alumno', fn($q6) => $q6->where('id_seccion', $request->seccion))
+                                  )
+                           )
+                       )
                 )
             )
             ->orderBy('apellido_p')

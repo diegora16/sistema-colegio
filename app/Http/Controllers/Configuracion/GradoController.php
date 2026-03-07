@@ -31,7 +31,9 @@ class GradoController extends Controller
     public function create()
     {
         $anioActivo = AnioAcademico::where('estado', 'activo')->first();
-        $niveles    = NivelEducativo::with('anioAcademico')->orderBy('nombre')->get();
+        $niveles    = $anioActivo
+            ? NivelEducativo::where('id_año', $anioActivo->id)->orderBy('nombre')->get()
+            : collect();
         return view('configuracion.grados.create', compact('niveles', 'anioActivo'));
     }
 
@@ -57,8 +59,11 @@ class GradoController extends Controller
 
     public function edit(Grado $grado)
     {
-        $niveles = NivelEducativo::with('anioAcademico')->orderBy('nombre')->get();
-        return view('configuracion.grados.edit', compact('grado', 'niveles'));
+        $anioActivo = AnioAcademico::where('estado', 'activo')->first();
+        $niveles    = $anioActivo
+            ? NivelEducativo::where('id_año', $anioActivo->id)->orderBy('nombre')->get()
+            : collect();
+        return view('configuracion.grados.edit', compact('grado', 'niveles', 'anioActivo'));
     }
 
     public function update(Request $request, Grado $grado)
